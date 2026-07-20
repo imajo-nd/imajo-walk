@@ -1,4 +1,4 @@
-const CACHE='imajo-walk-v4';
+const CACHE='imajo-review-v3-maps';
 const ASSETS=['./','./index.html','./app.js?v=4','./style.css?v=4','./manifest.webmanifest','./favicon.svg','./data/spots.js','./data/courses.js'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));});
 self.addEventListener('activate',event=>{event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()]));});
