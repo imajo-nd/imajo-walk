@@ -1,0 +1,10 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#147a4a"><title>今庄まち歩き</title><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="assets/style.css"></head><body>
+<header><div><small>南越前町・今庄</small><h1>今庄まち歩き</h1></div><button id="installBtn" hidden>アプリを追加</button></header>
+<main>
+<section class="hero"><div><span class="eyebrow">TODAY'S CHALLENGE</span><h2>今日のスタンプラリー</h2><p id="dateLabel"></p></div><div id="progressRing">0/3</div></section>
+<section id="challenge" class="challenge"></section>
+<section id="goal" class="goal hidden"><h2>3か所達成！</h2><p>今庄観光協会へ向かい、受付のQRコードを読み取って完成です。</p><div class="actions"><a class="primary" href="https://www.google.com/maps/search/?api=1&query=%E4%BB%8A%E5%BA%84%E8%A6%B3%E5%85%89%E5%8D%94%E4%BC%9A" target="_blank">観光協会へ案内</a><button id="scanBtn">QRコードを読む</button></div><div id="scanner" class="hidden"><video id="video" playsinline></video><label class="fileBtn">画像から読み取る<input id="qrFile" type="file" accept="image/*" hidden></label><button id="stopScan">閉じる</button></div></section>
+<section id="complete" class="complete hidden"><div class="confetti">🎉</div><h2>コンプリート！</h2><p>本日の今庄まち歩きを達成しました。</p><strong id="completeCode"></strong></section>
+<section><div class="sectionHead"><div><span class="eyebrow">SPOTS</span><h2>スポットを探す</h2></div><input id="search" type="search" placeholder="名称・カテゴリで検索"></div><div id="filters" class="filters"></div><div id="spots" class="grid"></div></section>
+</main><nav><button data-scroll="top">ホーム</button><button data-scroll="challenge">スタンプ</button><button data-scroll="spots">スポット</button></nav>
+<script src="assets/app.js"></script></body></html>
