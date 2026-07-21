@@ -13,4 +13,48 @@ function bind(){document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=
 function gpsStamp(id){let x=DB.spots.find(s=>s.id===id);if(!x?.lat){toast('この場所はGPSテスト対象外です');return}if(!navigator.geolocation){toast('位置情報に対応していません');return}toast('現在地を確認しています…');navigator.geolocation.getCurrentPosition(p=>{let d=dist(p.coords.latitude,p.coords.longitude,x.lat,x.lng);if(d<=100){let a=completed();if(!a.includes(id))a.push(id);saveCompleted(a);toast(`スタンプGET！ 約${Math.round(d)}m`);render()}else toast(`スポットまで約${Math.round(d)}mです`)},()=>toast('位置情報を許可してください'),{enableHighAccuracy:true,timeout:12000,maximumAge:0})}function dist(a,b,c,d){let R=6371000,r=Math.PI/180,da=(c-a)*r,db=(d-b)*r;let q=Math.sin(da/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(db/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
 async function startQR(){const r=document.querySelector('#reader');if(!('BarcodeDetector'in window)){r.innerHTML='<div class="notice">この端末ではカメラQR読取に対応していません。ゴール用QRを通常のカメラで開いてください。</div>';return}try{let stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}),v=document.createElement('video');v.setAttribute('playsinline','');v.srcObject=stream;r.innerHTML='';r.append(v);await v.play();let det=new BarcodeDetector({formats:['qr_code']});let timer=setInterval(async()=>{let codes=await det.detect(v).catch(()=>[]);if(codes.some(c=>c.rawValue.includes('goal=imajo-complete'))){clearInterval(timer);stream.getTracks().forEach(t=>t.stop());localStorage.setItem('imajoGoal-'+dateKey(),'1');r.innerHTML='<div class="complete"><div style="font-size:55px">🏆</div><h2>COMPLETE!</h2><p>本日の今庄まち歩き達成です。おめでとうございます！</p></div>'}},650)}catch(e){r.innerHTML='<div class="notice">カメラを利用できませんでした。ブラウザの権限をご確認ください。</div>'}}
 document.querySelectorAll('.bottom-nav button').forEach(b=>b.onclick=()=>nav(b.dataset.route));homeBtn.onclick=()=>nav('home');backBtn.onclick=()=>history.back();document.querySelector('#searchBtn').onclick=()=>nav('search');window.onpopstate=e=>{route=e.state?.r||'home';params=e.state?.p||{};render()};
-fetch('data/spots.json').then(r=>r.json()).then(d=>{DB=d;if(new URLSearchParams(location.search).get('goal')==='imajo-complete'){localStorage.setItem('imajoGoal-'+dateKey(),'1');route='stamp'}render()});if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+fetch('data/spots.json').then(r=>r.json()).then(d=>{DB=d;if(new URLSearchParams(location.search).get('goal')==='imajo-complete'){localStorage.setItem('imajoGoal-'+dateKey(),'1');route='stamp'}render()});
+
+// PWA更新通知：新しいService Workerが待機したときだけ表示する
+function showUpdateNotice(reg){
+  if(document.querySelector('#updateNotice'))return;
+  const box=document.createElement('div');
+  box.id='updateNotice';
+  box.className='update-notice';
+  box.innerHTML='<div><strong>新しいバージョンがあります</strong><small>最新の観光情報に更新できます。</small></div><button id="applyUpdate">更新する</button>';
+  document.body.appendChild(box);
+  requestAnimationFrame(()=>box.classList.add('show'));
+  document.querySelector('#applyUpdate').onclick=()=>{
+    const btn=document.querySelector('#applyUpdate');
+    btn.disabled=true;
+    btn.textContent='更新中…';
+    if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
+  };
+}
+
+if('serviceWorker'in navigator){
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(refreshing)return;
+    refreshing=true;
+    location.reload();
+  });
+  window.addEventListener('load',async()=>{
+    try{
+      const reg=await navigator.serviceWorker.register('sw.js');
+      if(reg.waiting&&navigator.serviceWorker.controller)showUpdateNotice(reg);
+      reg.addEventListener('updatefound',()=>{
+        const worker=reg.installing;
+        if(!worker)return;
+        worker.addEventListener('statechange',()=>{
+          if(worker.state==='installed'&&navigator.serviceWorker.controller)showUpdateNotice(reg);
+        });
+      });
+      reg.update();
+      document.addEventListener('visibilitychange',()=>{
+        if(document.visibilityState==='visible')reg.update();
+      });
+      setInterval(()=>reg.update(),60*60*1000);
+    }catch(e){console.warn('Service Worker registration failed',e)}
+  });
+}
